@@ -11,8 +11,179 @@
 </head>
 <body>
     
-    <div>
-        <h1>Привет, Ливитский Дима!</h1>
+    <div id="start_screen">
+        <h2 id='last_statistic'>Прошлая cтатистика не найдена</h2>
+        <button id="btnStart"> Новая игра</button>
     </div>
+    <div id="main_screen">
+        <div>
+            <!--
+            <div id="timer">
+                <p>Timer</p>
+            </div>
+            -->
+            <h2 id="questionH2">Question</h2>
+            <div class="answers">
+                <button class="answer b0"></button>
+                <button class="answer b1"></button>
+                <button class="answer b2"></button>
+                <button class="answer b3"></button>
+                <button class="answer b4"></button>
+            </div>
+            <button id="btnStats">Статистика</button>
+        </div>
+    </div>
+    <div id="stats_screen">
+        <h2 class="stat_total">1</h2>
+        <h2 class="stat_right">2</h2>
+        <button id="new_game">New game</button>
+    </div>
+
+
+    <script>
+
+        statistic_object = {
+            total: 0,
+            right: 0
+        }
+        function shuffle(array) {
+            array.sort(() => Math.random() - 0.5);
+          }
+        function next_q () {
+            let next_question = new Question ()
+            next_question.generate_answers()
+            next_question.show_question()
+            next_q.timerId = setTimeout(function() {next_q()}, 10000)
+        }
+        btnStart.addEventListener('click', function(){
+            start_screen.style.display = 'none'
+            main_screen.style.display = 'block'
+        })
+        btns = document.getElementsByClassName('answer')
+        for (let i=0; i<btns.length;i++) {
+            btns[i].addEventListener('click', function () {
+                statistic_object.total += 1
+                if (btns[i].isTrue) {
+                    statistic_object.right += 1
+                    anime({
+                        targets: `.b${i}`,
+                        duration: 1000,
+                        keyframes: [
+                            {backgroundColor: '#00FF00'},
+                            {backgroundColor: '#ededed'}
+                        ],
+                        easing: 'easeInOutSine'
+                    }) 
+                } else {
+                    
+                    anime({
+                        targets: `.b${i}`,
+                        duration: 1000,
+                        keyframes: [
+                            {backgroundColor: '#FF0000'},
+                            {backgroundColor: '#ededed'}
+                        ],
+                        easing: 'easeInOutSine'
+                    })
+                }
+                clearTimeout(next_q.timerId)
+                setTimeout(function () {next_q()}, 750)
+            })
+        }
+        class Question{
+
+            constructor() {
+                let operations = '+-*/'
+                this.n1 = Math.round(Math.random()*100) 
+                this.znak = operations[Math.round(Math.random()*3)]
+                this.n2 = Math.round(Math.random()*100)
+                this.text = '${this.n1} ${this.znak} ${this.n2}'
+            }
+
+            generate_answers () {
+
+                    if (this.znak=='+') {
+                        this.answerTrue = this.n1+this.n2
+                    } else if (this.znak=='-') {
+                        this.answerTrue = this.n1-this.n2
+                    }else if (this.znak=='*') {
+                        this.answerTrue = this.n1*this.n2
+                    }else if (this.znak=='/') {
+                        this.answerTrue = this.n1/this.n2
+                    }
+                    this.answers = [this.answerTrue, 
+                    this.answerTrue*2,
+                    this.answerTrue-2,
+                    this.answerTrue+5,
+                    this.answerTrue-4
+                    ]
+                    shuffle(this.answers)   
+                }
+            show_question () {
+                questionH2.innerHTML = `${this.n1} ${this.znak} ${this.n2}`
+                for (let i = 0; i<btns.length; i++) {
+                    btns[i].innerHTML = this.answers[i]
+                    btns[i].isTrue = this.answers[i] == this.answerTrue
+                }
+            }
+            }
+
+        function BeginGame() {
+            statistic_object.total = 0
+            statistic_object.right = 0
+            start_screen.style.display = 'block'
+            main_screen.style.display = 'none'
+            stats_screen.style.display = 'none'
+            next_q()
+        }
+        BeginGame()
+
+        
+        
+        
+        //
+        function end_game () {
+            let cookie = get_cookie()
+            if (cookie) {
+                let data = cookie.split('/')
+                last_statistic.innerHTML = `В прошлый раз вы дали ${data[0]} правильных ответов из ${data[1]}.`
+                document.cookie = `numbers_high_score=${statistic_object.right}/${statistic_object.total}`;
+            } else {
+                let new_cookie =`numbers_high_score=${statistic_object.right}/${statistic_object.total}; max-age=10000000000`
+                document.cookie = new_cookie  
+
+            }
+            clearTimeout(next_q.timerId)
+            start_screen.style.display = 'block'
+            main_screen.style.display = 'none'
+            stats_screen.style.display = 'none'
+        }
+    
+        function get_cookie () {
+            let cookies = document.cookie.split('; ')
+            let cookie = false
+            for (let i = 0; i < cookies.length; i += 1) {
+                if (cookies[i].split('=')[0] == 'numbers_high_score') {
+                    cookie = cookies[i].split('=')[1]
+                    break
+                }
+            }
+            return cookie
+
+        }
+        btnStats.addEventListener('click', function () {
+            end_game()
+            // statistic_object.total -= 1
+            alert(`Всего вопросов: ${statistic_object.total} \nПравильных ответов: ${statistic_object.right}`)
+            BeginGame()
+        })
+        let cookie = get_cookie()
+        if (cookie) {
+            let data = cookie.split('/')
+            last_statistic.innerHTML = `В прошлый раз вы дали ${data[0]} правильных ответов из ${data[1]}.`
+            document.cookie = `numbers_high_score=${statistic_object.right}/${statistic_object.total}`;
+        }
+    </script>
+
 
 </body>
